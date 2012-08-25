@@ -15,7 +15,7 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 {
 	static ArrayList<face> faces=new ArrayList<face>();
 	JButton settingsButton=null;
-	JScrollPane scrollPane=null;
+	JScrollPane scrollPane=null; //Comment
 	JPanel panel=null;
 	static JProgressBar progressBar=null;
 	ArrayList<JButton> buttons=new ArrayList<JButton>(); //array of buttons that parallels faces array for easy button checking in action listener
