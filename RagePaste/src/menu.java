@@ -16,6 +16,7 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 	static ArrayList<face> faces=new ArrayList<face>();
 	JButton settingsButton=null;
 	JScrollPane scrollPane=null; //Comment
+	JSlider slider=null;
 	JPanel panel=null;
 	static JProgressBar progressBar=null;
 	ArrayList<JButton> buttons=new ArrayList<JButton>(); //array of buttons that parallels faces array for easy button checking in action listener
@@ -57,7 +58,7 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 		progressBar.setVisible(true);
 		progressBar.setIndeterminate(true);
 		//http://www.dreamincode.net/forums/topic/27952-progress-bar-tutorial/
-		new Thread(new thread1()).start();
+		new Thread(new downloadThread()).start();
 
 		repaint();
 		
@@ -86,6 +87,7 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 			
 			
 			temp=new JButton(images.get(i));
+			temp.setToolTipText(faces.get(i).getName());
 			//System.out.println(faces.get(i).getName()+" set.");
 			
 			//temp=new JButton(new ImageIcon(faces.get(i).getImageURL()));
@@ -182,7 +184,14 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 		settingsButton.addActionListener(this);
 		this.add(settingsButton);
 		
-		
+		slider=new JSlider(JSlider.HORIZONTAL,0,5,5);
+		slider.setLocation(700,00);
+		slider.setSize(95,30);
+		slider.setVisible(false);
+		slider.setMajorTickSpacing(5);
+        slider.setMinorTickSpacing(1);
+        slider.setPaintTicks(true);
+		this.add(slider);
 		
 		progressBar =new JProgressBar(0, 0);
 		//progressBar.setValue(5);
@@ -285,7 +294,8 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 
 	}
 
-	public class thread1 implements Runnable{
+	public class downloadThread implements Runnable
+	{
 		public void run()
 		{
 			//Download all images using threads
@@ -326,6 +336,7 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 			
 			progressBar.setVisible(false);
 			progressBar.setValue(0);
+			slider.setVisible(true);
 			
 			
 		}
