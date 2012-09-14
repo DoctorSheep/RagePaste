@@ -10,8 +10,10 @@ import java.net.URLConnection;
 import javax.activation.*;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
-public class menu extends JComponent implements ActionListener, MouseMotionListener, MouseListener
+public class menu extends JComponent implements ActionListener, MouseMotionListener, MouseListener, ChangeListener
 {
 	static ArrayList<face> faces=new ArrayList<face>();
 	JButton settingsButton=null;
@@ -33,7 +35,7 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 	public menu() throws IOException
 	{
 		//set size of window
-		setPreferredSize(new Dimension(800, 600));
+		setPreferredSize(new Dimension(830, 600));
 		
 		//If a settings file already exists
 		if(settingsFile.exists())
@@ -57,6 +59,10 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 		
 		progressBar.setVisible(true);
 		progressBar.setIndeterminate(true);
+		
+		ToolTipManager.sharedInstance().setInitialDelay(10000);
+		ToolTipManager.sharedInstance().setReshowDelay(0);
+		
 		//http://www.dreamincode.net/forums/topic/27952-progress-bar-tutorial/
 		new Thread(new downloadThread()).start();
 
@@ -75,7 +81,28 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 		buttons.clear();
 		scrollPane=null;
 		
-		panel = new JPanel(new GridLayout(0,3));
+		int scrollpanex=800;
+		int scrollpaney=550;
+		
+		int horizontalSquares=0;
+		if(slider.getValue()==3)
+		{
+			horizontalSquares=2;
+		}
+		else if(slider.getValue()==2)
+		{
+			horizontalSquares=4;
+			scrollpanex+=2;
+		}
+		else if(slider.getValue()==1)
+		{
+			horizontalSquares=8;
+		}
+		else if(slider.getValue()==0)
+		{
+			horizontalSquares=15;
+		}
+		panel = new JPanel(new GridLayout(0,horizontalSquares));
 		
 		
 		for(int i=0;i<faces.size();i++)
@@ -86,10 +113,12 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 			//temp=new JButton(tempImageIcon); //get image for button
 			
 			
-			temp=new JButton(images.get(i));
+			//temp=new JButton(images.get(i));
+			temp= new JButton(faces.get(i).getImage(slider.getValue()));
+			
 			temp.setToolTipText(faces.get(i).getName());
 			//System.out.println(faces.get(i).getName()+" set.");
-			
+			temp.setMargin(new Insets(0,0,0,0));
 			//temp=new JButton(new ImageIcon(faces.get(i).getImageURL()));
 			
 			//final URL url = new URL("file:///C:/Users/Karl/Desktop/Dropbox/workspace/Rage%20Paste/rsrc/images/i%20have%20no%20idea%20what%20i%27m%20doing.jpg");
@@ -98,7 +127,7 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 			temp.addActionListener(this);
 			temp.addMouseMotionListener(this);
 			temp.addMouseListener(this);
-			temp.setSize(200, 200);
+			temp.setSize(50, 50);
 			buttons.add(temp);
 			panel.add(temp);
 			//panel.add(new JButton(faces.get(i).getImage()));
@@ -106,12 +135,11 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 			
 	    }
 		//Scroll pane of grid dimensions
-		int scrollpanex=720;
-		int scrollpaney=550;
+		
 		scrollPane=new JScrollPane(panel);
-		scrollPane.setSize(scrollpanex, scrollpaney);
+		scrollPane.setSize(scrollpanex+40, scrollpaney);
 		//Set the grid in the bottom right corner no matter the size
-		scrollPane.setLocation(getPreferredSize().width-scrollpanex,getPreferredSize().height-scrollpaney);
+		scrollPane.setLocation(0,60);
 		scrollPane.setVisible(true);
 		this.add(scrollPane);
 		
@@ -148,23 +176,43 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 			else
 			{
 				sentinel=1; //Default to adding the face
+				int urlNotSame=0;
+				int urlNotSameIndex=-1;
 				//Go through all existing faces
 				for(int j=0;j<faces.size();j++)
 				{
 					//System.out.println("Checking face number "+j);
 					//If you have the face already
-					if(faces.get(j).getName().contains(tempName)&&faces.get(j).getUrl().contains(tempUrl))
+					if(faces.get(j).getName().equals(tempName))
 					{
-						//System.out.println("Already have this face");
-						sentinel=0; //Dont add the face
-						break; //Don't need to check remaining faces, already found the droids we were looking for
+						System.out.println("Name is the same");
+						if(faces.get(j).getUrl().equals(tempUrl))
+						{
+							//System.out.println("Already have this face");
+							sentinel=0; //Dont add the face
+							break; //Don't need to check remaining faces, already found the droids we were looking for
+						}
+						else
+						{
+							urlNotSame=1;
+							urlNotSameIndex=j;
+						}
 					}
 				}
 				//If face wasn't found
 				if(sentinel==1)
 				{
-					//System.out.println("Adding this new face");
-					faces.add(new face(tempName,tempUrl)); //Add the face to the array
+					if(urlNotSame==1)
+					{
+						faces.get(urlNotSameIndex).setUrl(tempUrl);
+						System.out.println("A URL was modified");
+						System.out.println(faces.get(urlNotSameIndex).getUrl());
+					}
+					else
+					{
+						//System.out.println("Adding this new face");
+						faces.add(new face(tempName,tempUrl)); //Add the face to the array
+					}
 				}
 				
 			}
@@ -184,26 +232,41 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 		settingsButton.addActionListener(this);
 		this.add(settingsButton);
 		
-		slider=new JSlider(JSlider.HORIZONTAL,0,5,5);
-		slider.setLocation(700,00);
+		slider=new JSlider(JSlider.HORIZONTAL,0,3,2);
+		slider.setLocation(745,00);
 		slider.setSize(95,30);
 		slider.setVisible(false);
-		slider.setMajorTickSpacing(5);
+		slider.setMajorTickSpacing(2);
         slider.setMinorTickSpacing(1);
         slider.setPaintTicks(true);
+        slider.addChangeListener(this);
 		this.add(slider);
 		
 		progressBar =new JProgressBar(0, 0);
 		//progressBar.setValue(5);
 		//progressBar.setVisible(true);
 		progressBar.setLocation(95,0);
-		progressBar.setSize(800-85,30);
+		progressBar.setSize(830-85,30);
 		
 		progressBar.setMaximum(faces.size()-1);
 		progressBar.setStringPainted(true);
 		this.add(progressBar);
 		
 		repaint();
+	}
+	
+	public void stateChanged(ChangeEvent e)
+	{
+	    JSlider source = (JSlider)e.getSource();
+	    if (!source.getValueIsAdjusting())
+	    {
+	        try {
+				setUpGrid();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+	    }
 	}
 	
 	//Write a string to the keyboard
@@ -254,8 +317,6 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 	//Action Listener for buttons
 	public void actionPerformed(ActionEvent e) 
 	{
-		
-		
 		//If the settings button is clicked
 		if(e.getSource()==settingsButton)
 		{
@@ -300,6 +361,7 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 		{
 			//Download all images using threads
 			long startThreadTimer=System.nanoTime(); //Start thread timer
+			
 			//http://stackoverflow.com/questions/7502718/java-download-multiple-files-using-threads
 			ExecutorService pool = Executors.newFixedThreadPool(100);
 			for(int i=0;i<faces.size();i++)
@@ -376,60 +438,21 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 			}
 			
 			//String contentType = connection.getContentType();
+			//System.out.println(connection.getContentType());
+			faces.get(name).setImageType(connection.getContentType());
+			faces.get(name).setImage(tempImageIcon);
 			
+			//image scaling was right here
 			
-			//Check content type from website connection, If it's not a gif
-			if(connection.getContentType().contains("gif")!=true)
-			{
-				Image img=tempImageIcon.getImage();
-				
-				//Smooth scaling doesn't work with animated gifs, have to use scale_fast
-				Image tempImg;
-				if(tempImageIcon.getIconHeight()>tempImageIcon.getIconWidth())
-				{
-					tempImg=img.getScaledInstance(-1,200,java.awt.Image.SCALE_SMOOTH);
-				}
-				else if(tempImageIcon.getIconHeight()<tempImageIcon.getIconWidth())
-				{
-					tempImg=img.getScaledInstance(200,-1,java.awt.Image.SCALE_SMOOTH);
-				}
-				else
-				{
-					tempImg=img.getScaledInstance(200,200,java.awt.Image.SCALE_SMOOTH);
-				}
-				tempImageIcon=new ImageIcon(tempImg);
-			}
-			//Check content type from website connection, If it is a gif
-			else if(connection.getContentType().contains("gif")==true)
-			{
-				Image img=tempImageIcon.getImage();
-				
-				//Smooth scaling doesn't work with animated gifs, have to use scale_fast
-				Image tempImg;
-				if(tempImageIcon.getIconHeight()>tempImageIcon.getIconWidth())
-				{
-					tempImg=img.getScaledInstance(-1,200,java.awt.Image.SCALE_FAST);
-				}
-				else if(tempImageIcon.getIconHeight()<tempImageIcon.getIconWidth())
-				{
-					tempImg=img.getScaledInstance(200,-1,java.awt.Image.SCALE_FAST);
-				}
-				else
-				{
-					tempImg=img.getScaledInstance(200,200,java.awt.Image.SCALE_FAST);
-				}
-				tempImageIcon=new ImageIcon(tempImg);
-				
-				
-			}
 			//Have the threads enter limbo when done processing, this insures they are added in order.
-			boolean sentinel=false; //if this thread is sleeping and hasnt been counted as a percentage done set false
+			boolean sentinel=false; //if this thread is sleeping and hasn't been counted as a percentage done set false
 			do
 			{
 				//Add the 0th picture
 				if(name==0)
 				{
 					images.add(tempImageIcon);
+					
 					if(sentinel==false)
 					{
 						progressBar.setIndeterminate(false);
@@ -444,6 +467,7 @@ public class menu extends JComponent implements ActionListener, MouseMotionListe
 				else if(name==(images.size()))
 				{
 					images.add(tempImageIcon);
+					
 					if(sentinel==false)
 					{
 						progressBar.setIndeterminate(false);
